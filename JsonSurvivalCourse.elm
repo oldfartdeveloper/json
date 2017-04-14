@@ -1,7 +1,7 @@
 
 import Html exposing (..)
 import Json.Decode as Decode exposing (Decoder, bool, int, float, string, null, list, dict, field, at)
-
+import Json.Decode.Pipeline as Pipeline exposing (decode, required, requiredAt)
 
 main =
     Html.beginnerProgram
@@ -15,10 +15,36 @@ main =
 
 
 type alias GithubUser =
-    { id : Int
-    , login : String
+    { login : String
+    , id : Int
+    , avatarUrl : String
+    , gravatarId : String
+    , url : String
+    , htmlUrl : String
+    , followersUrl : String
+    , followingUrl : String
+    , gistsUrl : String
+    , starredUrl : String
+    , subscriptionsUrl : String
+    , organizationsUrl : String
+    , reposUrl : String
+    , eventsUrl : String
+    , receivedEventsUrl : String
+    , type_ : String
+    , siteAdmin : Bool
     , name : String
-    , gravatarId : Maybe String
+    , company : String
+    , blog : String
+    , location : String
+    , email : String
+    , hireable : Maybe Bool
+    , bio : Maybe String
+    , publicRepos : Int
+    , publicGists : Int
+    , followers : Int
+    , following : Int
+--    , createdAt : String
+--    , updatedAt : String
     }
 
 
@@ -55,8 +81,8 @@ init =
               "blog": "http://www.github.com/blog",
               "location": "San Francisco",
               "email": "octocat@github.com",
-              "hireable": null,
-              "bio": null,
+              "hireable": true,
+              "bio": "a bio",
               "public_repos": 7,
               "public_gists": 8,
               "followers": 1667,
@@ -102,7 +128,7 @@ view model =
               [ text model.github
               ]
         , pre []
-              [ Decode.decodeString (at ["login"] string) model.github
+              [ Decode.decodeString githubUser model.github
                 |> toString
                 |> text
               ]
@@ -112,3 +138,52 @@ view model =
                 |> text
               ]
         ]
+
+
+gravatarId : Decoder (Maybe String)
+gravatarId =
+    Decode.map (\id -> if id == "" then Nothing else Just id) string
+
+
+loginAndName : Decoder (String, String)
+loginAndName =
+    Decode.map2 (,)
+        (field "login" string)
+        (field "name" string)
+
+
+githubUser : Decoder GithubUser
+githubUser =
+    Pipeline.decode GithubUser
+        |> Pipeline.required "login" (string)
+        |> Pipeline.required "id" (int)
+        |> Pipeline.required "avatar_url" (string)
+        |> Pipeline.required "gravatar_id" (string)
+        |> Pipeline.required "url" (string)
+        |> Pipeline.required "html_url" (string)
+        |> Pipeline.required "followers_url" (string)
+        |> Pipeline.required "following_url" (string)
+        |> Pipeline.required "gists_url" (string)
+        |> Pipeline.required "starred_url" (string)
+        |> Pipeline.required "subscriptions_url" (string)
+        |> Pipeline.required "organizations_url" (string)
+        |> Pipeline.required "repos_url" (string)
+        |> Pipeline.required "events_url" (string)
+        |> Pipeline.required "received_events_url" (string)
+        |> Pipeline.required "type" (string)
+        |> Pipeline.required "site_admin" (bool)
+        |> Pipeline.required "name" (string)
+        |> Pipeline.required "company" (string)
+        |> Pipeline.required "blog" (string)
+        |> Pipeline.required "location" (string)
+        |> Pipeline.required "email" (string)
+        |> Pipeline.required "hireable" (Decode.maybe bool)
+        |> Pipeline.required "bio" (Decode.maybe string)
+        |> Pipeline.required "public_repos" (int)
+        |> Pipeline.required "public_gists" (int)
+        |> Pipeline.required "followers" (int)
+        |> Pipeline.required "following" (int)
+--        |> Pipeline.required "createdAt" (string)
+--        |> Pipeline.required "updatedAt" (string)
+
+
