@@ -92,5 +92,8 @@ view model =
               [ text model.github
               ]
         , pre []
-              [ text (toString (Decode.decodeString (dict (list int)) "{\"x\": [1]}"))]
+              [ Decode.decodeString (dict (list int)) "{\"x\": [1]}"
+                |> toString
+                |> text
+              ]
         ]
