@@ -1,6 +1,6 @@
 
 import Html exposing (..)
-import Json.Decode as Decode exposing (Decoder, bool, int, float, string, null, list, dict)
+import Json.Decode as Decode exposing (Decoder, bool, int, float, string, null, list, dict, field, at)
 
 
 main =
@@ -24,13 +24,13 @@ type alias GithubUser =
 
 type alias Model =
     { github : String
+    , nested : String
     }
 
 
 init : Model
 init =
-    {
-        github =
+    { github =
             """
             {
               "login": "octocat",
@@ -65,6 +65,16 @@ init =
               "updated_at": "2016-12-23T05:44:24Z"
             }
             """
+    , nested =
+        """
+        {
+          "x": {
+            "y": {
+              "z": "Hello, World!"
+            }
+          }
+        }
+        """
     }
 
 
@@ -92,7 +102,12 @@ view model =
               [ text model.github
               ]
         , pre []
-              [ Decode.decodeString (dict (list int)) "{\"x\": [1]}"
+              [ Decode.decodeString (at ["login"] string) model.github
+                |> toString
+                |> text
+              ]
+        , pre []
+              [ Decode.decodeString (at ["x", "y", "z"] string) model.nested
                 |> toString
                 |> text
               ]
