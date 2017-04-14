@@ -1,6 +1,6 @@
 
 import Html exposing (..)
-import Json.Decode exposing (..)
+import Json.Decode as Decode exposing (Decoder, bool, int, float, string, null, list, dict)
 
 
 main =
@@ -92,5 +92,5 @@ view model =
               [ text model.github
               ]
         , pre []
-              [ text (toString (decodeString bool "true"))]
+              [ text (toString (Decode.decodeString (dict (list int)) "{\"x\": [1]}"))]
         ]
