@@ -51,10 +51,25 @@ type alias GithubUser =
 type alias Model =
     { github : String
     , nested : String
+    , pies : String
     }
 
 
-init : Model
+type alias Pie =
+    { filling : String
+    , goodWithIceCream : Bool
+    , madeBy : String
+    }
+
+
+pie : Decoder Pie
+pie =
+    decode Pie
+        |> required "filling" string
+        |> required "goodWithIceCream" bool
+        |> required "madeBy" string
+
+
 init =
     { github =
             """
@@ -101,6 +116,21 @@ init =
           }
         }
         """
+    , pies =
+        """
+        {
+          "cherry": {
+            "filling": "cherries and love",
+            "goodWithIceCream": true,
+            "madeBy": "my grandmother"
+          },
+          "odd": {
+            "filling": "rocks, I think?",
+            "goodWithIceCream": false,
+            "madeBy": "a child, maybe?"
+          }
+        }
+        """
     }
 
 
@@ -134,6 +164,11 @@ view model =
               ]
         , pre []
               [ Decode.decodeString (at ["x", "y", "z"] string) model.nested
+                |> toString
+                |> text
+              ]
+        , pre []
+              [ Decode.decodeString (dict pie) model.pies
                 |> toString
                 |> text
               ]
