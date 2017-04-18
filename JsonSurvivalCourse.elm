@@ -1,6 +1,6 @@
 
 import Html exposing (div, pre, text, Html)
-import Json.Decode as Decode exposing (Decoder, bool, int, float, string, null, list, dict, field, at, oneOf, map)
+import Json.Decode as Decode exposing (Decoder, bool, int, float, string, null, list, dict, field, at, oneOf, map, andThen)
 import Json.Decode.Pipeline as Pipeline exposing (decode, required, requiredAt)
 
 main =
@@ -56,10 +56,20 @@ cake =
 
 bakedGood : Decoder BakedGood
 bakedGood =
-    oneOf
-        [ map PieValue pie
-        , map CakeValue cake
-        ]
+    let
+        decoderBakedGood : String -> Decoder BakedGood
+        decoderBakedGood tag =
+            case tag of
+                "pie" ->
+                    Decode.map PieValue pie
+
+                "cake" ->
+                    Decode.map CakeValue cake
+
+                _ ->
+                    Decode.fail ("Can't decode " ++ tag ++ "\"")
+    in
+        field "type" string |> andThen decoderBakedGood
 
 
 init =
@@ -67,16 +77,19 @@ init =
         """
         {
           "cherry": {
+            "type": "pie",
             "filling": "cherries and love",
             "goodWithIceCream": true,
             "madeBy": "my grandmother"
           },
           "odd": {
+            "type": "pie",
             "filling": "rocks, I think?",
             "goodWithIceCream": false,
             "madeBy": "a child, maybe?"
           },
           "super-chocolate": {
+            "type": "cake",
             "flavor": "german chocolate with chocolate shavings",
             "forABirthday": false,
             "madeBy": "the charming bakery up the street"
