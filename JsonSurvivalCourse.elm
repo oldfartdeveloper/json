@@ -38,16 +38,24 @@ user =
         |> optional "age" (map Just int) Nothing
 
 
+userList : Decoder (List User)
+userList =
+    oneOf
+        [ list user
+        , user |> map (\user -> [ user ])
+        ]
+
 init =
     { duckula =
         """
-        {
-          "id": 1,
-          "name": "Count Duckula",
-          "username": "feathersandfangs",
-          "email": "quack@countduckula.com",
-          "age": 881
-        }
+          [
+                {
+                  "id": 1,
+                  "name": "Count Duckula",
+                  "username": "feathersandfangs",
+                  "email": "quack@countduckula.com"
+                }
+          ]
         """
     }
 
@@ -73,7 +81,7 @@ view : Model -> Html Msg
 view model =
     div []
         [ pre []
-              [ Decode.decodeString user model.duckula
+              [ Decode.decodeString userList model.duckula
                 |> toString
                 |> text
               ]
