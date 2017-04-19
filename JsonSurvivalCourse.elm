@@ -1,7 +1,7 @@
 
 import Html exposing (div, pre, text, Html)
 import Json.Decode as Decode exposing (Decoder, bool, int, float, string, null, list, dict, field, at, oneOf, map, andThen)
-import Json.Decode.Pipeline as Pipeline exposing (decode, required, requiredAt)
+import Json.Decode.Pipeline as Pipeline exposing (decode, required, requiredAt, optional)
 
 main =
     Html.beginnerProgram
@@ -15,85 +15,35 @@ main =
 
 
 type alias Model =
-    { piesAndCakes : String
+    { duckula : String
     }
 
 
-type alias Pie =
-    { filling : String
-    , goodWithIceCream : Bool
-    , madeBy : String
-    }
+type alias User =
+     { id : Int
+     , name : String
+     , username : String
+     , email : String
+     }
 
 
-type alias Cake =
-    { flavor : String
-    , forABirthday : Bool
-    , madeBy : String
-    }
-
-
-type BakedGood
-    = PieValue Pie
-    | CakeValue Cake
-
-
-pie : Decoder Pie
-pie =
-    decode Pie
-        |> required "filling" string
-        |> required "goodWithIceCream" bool
-        |> required "madeBy" string
-
-
-cake : Decoder Cake
-cake =
-    decode Cake
-        |> required "flavor" string
-        |> required "forABirthday" bool
-        |> required "madeBy" string
-
-
-bakedGood : Decoder BakedGood
-bakedGood =
-    let
-        decoderBakedGood : String -> Decoder BakedGood
-        decoderBakedGood tag =
-            case tag of
-                "pie" ->
-                    Decode.map PieValue pie
-
-                "cake" ->
-                    Decode.map CakeValue cake
-
-                _ ->
-                    Decode.fail ("Can't decode " ++ tag ++ "\"")
-    in
-        field "type" string |> andThen decoderBakedGood
+user : Decoder User
+user =
+    decode User
+        |> required "id" int
+        |> required "name" string
+        |> required "username" string
+        |> required "email" string
 
 
 init =
-    { piesAndCakes =
+    { duckula =
         """
         {
-          "cherry": {
-            "type": "pie",
-            "filling": "cherries and love",
-            "goodWithIceCream": true,
-            "madeBy": "my grandmother"
-          },
-          "odd": {
-            "type": "pie",
-            "filling": "rocks, I think?",
-            "goodWithIceCream": false,
-            "madeBy": "a child, maybe?"
-          },
-          "super-chocolate": {
-            "type": "cake",
-            "flavor": "german chocolate with chocolate shavings",
-            "forABirthday": false,
-            "madeBy": "the charming bakery up the street"
-          }
+          "id": 1,
+          "name": "Count Duckula",
+          "username": "feathersandfangs",
+          "email": "quack@countduckula.com"
         }
         """
     }
@@ -120,7 +70,7 @@ view : Model -> Html Msg
 view model =
     div []
         [ pre []
-              [ Decode.decodeString (dict bakedGood) model.piesAndCakes
+              [ Decode.decodeString user model.duckula
                 |> toString
                 |> text
               ]
