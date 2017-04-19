@@ -15,7 +15,7 @@ main =
 
 
 type alias Model =
-    { duckula : String
+    { user : String
     }
 
 
@@ -24,7 +24,6 @@ type alias User =
      , name : String
      , username : String
      , email : String
-     , age : Maybe Int
      }
 
 
@@ -35,27 +34,34 @@ user =
         |> required "name" string
         |> required "username" string
         |> required "email" string
-        |> optional "age" (map Just int) Nothing
 
-
-userList : Decoder (List User)
-userList =
-    oneOf
-        [ list user
-        , user |> map (\user -> [ user ])
-        ]
 
 init =
-    { duckula =
+    { user =
         """
-          [
-                {
-                  "id": 1,
-                  "name": "Count Duckula",
-                  "username": "feathersandfangs",
-                  "email": "quack@countduckula.com"
-                }
-          ]
+        {
+          "id": 1,
+          "name": "Leanne Graham",
+          "username": "Bret",
+          "email": "Sincere@april.biz",
+          "address": {
+            "street": "Kulas Light",
+            "suite": "Apt. 556",
+            "city": "Gwenborough",
+            "zipcode": "92998-3874",
+            "geo": {
+              "lat": "-37.3159",
+              "lng": "81.1496"
+            }
+          },
+          "phone": "1-770-736-8031 x56442",
+          "website": "hildegard.org",
+          "company": {
+            "name": "Romaguera-Crona",
+            "catchPhrase": "Multi-layered client-server neural-net",
+            "bs": "harness real-time e-markets"
+          }
+        }
         """
     }
 
@@ -81,7 +87,7 @@ view : Model -> Html Msg
 view model =
     div []
         [ pre []
-              [ Decode.decodeString userList model.duckula
+              [ Decode.decodeString user model.user
                 |> toString
                 |> text
               ]
