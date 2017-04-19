@@ -24,6 +24,7 @@ type alias User =
      , name : String
      , username : String
      , email : String
+     , age : Maybe Int
      }
 
 
@@ -34,6 +35,7 @@ user =
         |> required "name" string
         |> required "username" string
         |> required "email" string
+        |> optional "age" (map Just int) Nothing
 
 
 init =
@@ -43,7 +45,8 @@ init =
           "id": 1,
           "name": "Count Duckula",
           "username": "feathersandfangs",
-          "email": "quack@countduckula.com"
+          "email": "quack@countduckula.com",
+          "age": 881
         }
         """
     }
