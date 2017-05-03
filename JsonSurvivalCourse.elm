@@ -5,21 +5,24 @@ import Json.Decode as Decode exposing (Decoder, bool, int, float, string, null, 
 import Json.Decode.Pipeline as Pipeline exposing (decode, required, requiredAt, optional)
 import Http
 import HttpBuilder
-import RemoteData exposing (WebData)
+import RemoteData exposing (WebData, RemoteData(..))
+import Time exposing (second, Time)
 
 
 main =
-    Html.beginnerProgram
-        { model = init
+    Html.program
+        { init = init
         , view = view
+        , subscriptions = subscriptions
         , update = update
         }
 
 
+
 -- MODEL
-
-
 -- Shouldn't need this for chapter 4
+
+
 fakeUser =
     """
     {
@@ -53,9 +56,11 @@ type alias Model =
     }
 
 
+init : ( Model, Cmd Msg )
 init =
-    { user =
-    }
+    ( { user =  Loading }
+    , Cmd.none
+    )
 
 
 type alias User =
@@ -81,7 +86,7 @@ getUser id =
         |> HttpBuilder.get
         |> HttpBuilder.withExpect (Http.expectJson userDecoder)
         |> HttpBuilder.send RemoteData.fromResult
-        |> Cmd.map UserLoaded
+        |> Cmd.map UserResponse
 
 
 
@@ -89,14 +94,31 @@ getUser id =
 
 
 type Msg
-    = UserLoaded (WebData User)
+    = UserResponse (WebData User)
+    | Tick Time
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg)
 update msg model =
     case msg of
-        UserLoaded u ->
-            { model | user = u }
+        UserResponse response ->
+            ( { model | user = response }
+            , Cmd.none
+            )
+
+        Tick time ->
+            ( model
+            , Cmd.none
+            )
+
+
+
+-- SUBSCRIPTIONS
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Time.every second Tick
 
 
 
@@ -105,9 +127,25 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
+    case model.user of
+        NotAsked ->
+            text "Initializing."
+
+        Loading ->
+            text "Loading."
+
+        Failure err ->
+            text ("Error: " ++ toString err)
+
+        Success user ->
+            viewUser user
+
+
+viewUser : User -> Html msg
+viewUser user =
     div []
         [ pre []
-            [ Decode.decodeString userDecoder model.user
+            [ user
                 |> toString
                 |> text
             ]
