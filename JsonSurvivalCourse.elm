@@ -1,6 +1,7 @@
 module JsonSurvivalCourse exposing (..)
 
-import Html exposing (div, pre, text, Html)
+import Html exposing (div, pre, text, button, Html)
+import Html.Events exposing (onClick)
 import Json.Decode as Decode exposing (Decoder, bool, int, float, string, null, list, dict, field, at, oneOf, map, andThen)
 import Json.Decode.Pipeline as Pipeline exposing (decode, required, requiredAt, optional)
 import Http
@@ -56,11 +57,10 @@ type alias Model =
     }
 
 
-init : ( Model, Cmd Msg )
-init =
-    ( { user =  Loading }
-    , Cmd.none
-    )
+type Msg
+    = UserResponse (WebData User)
+    | RequestUser
+    | Tick Time
 
 
 type alias User =
@@ -69,6 +69,22 @@ type alias User =
     , username : String
     , email : String
     }
+
+
+getUser : Int -> Cmd Msg
+getUser id =
+    ("http://localhost:3000/users/" ++ toString id)
+        |> HttpBuilder.get
+        |> HttpBuilder.withExpect (Http.expectJson userDecoder)
+        |> HttpBuilder.send RemoteData.fromResult
+        |> Cmd.map UserResponse
+
+
+init : ( Model, Cmd Msg )
+init =
+    ( { user =  Loading }
+    , Cmd.none
+    )
 
 
 userDecoder : Decoder User
@@ -80,27 +96,14 @@ userDecoder =
         |> required "email" string
 
 
-getUser : Int -> Cmd Msg
-getUser id =
-    ("https://jsonplaceholder.typicode.com/users/" ++ toString id)
-        |> HttpBuilder.get
-        |> HttpBuilder.withExpect (Http.expectJson userDecoder)
-        |> HttpBuilder.send RemoteData.fromResult
-        |> Cmd.map UserResponse
-
-
-
--- UPDATE
-
-
-type Msg
-    = UserResponse (WebData User)
-    | Tick Time
-
-
 update : Msg -> Model -> ( Model, Cmd Msg)
 update msg model =
     case msg of
+        RequestUser ->
+            ( model
+            , getUser 1
+            )
+
         UserResponse response ->
             ( { model | user = response }
             , Cmd.none
@@ -112,33 +115,29 @@ update msg model =
             )
 
 
-
--- SUBSCRIPTIONS
-
-
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Time.every second Tick
 
 
-
--- VIEW
-
-
 view : Model -> Html Msg
 view model =
-    case model.user of
-        NotAsked ->
-            text "Initializing."
+    div[]
+        [button[ onClick RequestUser ][ text "Request User"]
+        ,
+        case model.user of
+            NotAsked ->
+                text "Initializing."
 
-        Loading ->
-            text "Loading."
+            Loading ->
+                text "Loading."
 
-        Failure err ->
-            text ("Error: " ++ toString err)
+            Failure err ->
+                text ("Error: " ++ toString err)
 
-        Success user ->
-            viewUser user
+            Success user ->
+                viewUser user
+        ]
 
 
 viewUser : User -> Html msg
