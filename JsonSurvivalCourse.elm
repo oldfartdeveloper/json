@@ -7,7 +7,6 @@ import Json.Decode.Pipeline as Pipeline exposing (decode, required, requiredAt, 
 import Http
 import HttpBuilder
 import RemoteData exposing (WebData, RemoteData(..))
-import Time exposing (second, Time)
 
 
 main =
@@ -60,7 +59,6 @@ type alias Model =
 type Msg
     = UserResponse (WebData User)
     | RequestUser
-    | Tick Time
 
 
 type alias User =
@@ -83,7 +81,7 @@ getUser id =
 init : ( Model, Cmd Msg )
 init =
     ( { user =  Loading }
-    , Cmd.none
+    , getUser 1
     )
 
 
@@ -109,15 +107,9 @@ update msg model =
             , Cmd.none
             )
 
-        Tick time ->
-            ( model
-            , Cmd.none
-            )
-
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
-    Time.every second Tick
+subscriptions _ = Sub.none
 
 
 view : Model -> Html Msg
